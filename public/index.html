@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Lighting AI Agent – PDF Search</title>
+</head>
+<body>
+  <h1>Lighting AI Agent</h1>
+
+  <section>
+    <h2>1. Upload Company</h2>
+    <input type="text" id="companyName" placeholder="Company name" />
+    <button id="saveCompanyBtn">Save Company</button>
+  </section>
+
+  <section>
+    <h2>2. Upload PDF Catalog</h2>
+    <input type="file" id="pdfFile" accept="application/pdf" />
+    <button id="uploadPdfBtn">Upload PDF</button>
+    <div id="uploadStatus"></div>
+  </section>
+
+  <section>
+    <h2>3. Search Products by Specs</h2>
+    <textarea id="searchSpecs" rows="4" cols="50"
+      placeholder="Example: outdoor floodlight 100W 4000K IP65"></textarea>
+    <button id="searchBtn">Search</button>
+    <div id="searchResults"></div>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+
+    // 👉 Βάλε εδώ το firebaseConfig από το Firebase Console
+    const firebaseConfig = {
+      apiKey: "API_KEY_SOU",
+      authDomain: "AUTH_DOMAIN_SOU",
+      projectId: "PROJECT_ID_SOU",
+      storageBucket: "STORAGE_BUCKET_SOU",
+      messagingSenderId: "MSG_SENDER_ID_SOU",
+      appId: "APP_ID_SOU"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+
+    const pdfFileInput = document.getElementById('pdfFile');
+    const uploadPdfBtn = document.getElementById('uploadPdfBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    const searchBtn = document.getElementById('searchBtn');
+    const searchSpecs = document.getElementById('searchSpecs');
+    const searchResults = document.getElementById('searchResults');
+
+    // 1) Upload PDF στο Firebase Storage (αργότερα θα καλείς και N8N webhook)
+    uploadPdfBtn.addEventListener('click', async () => {
+      const file = pdfFileInput.files[0];
+      if (!file) {
+        uploadStatus.innerText = 'Διάλεξε ένα PDF πρώτα.';
+        return;
+      }
+      try {
+        const storageRef = ref(storage, 'company-pdfs/' + file.name);
+        await uploadBytes(storageRef, file);
+        uploadStatus.innerText = 'Το PDF ανέβηκε στο Storage. (Επόμενο βήμα: call N8N)';
+      } catch (err) {
+        console.error(err);
+        uploadStatus.innerText = 'Σφάλμα στο upload: ' + err.message;
+      }
+    });
+
+    // 2) Search – Προς το παρόν απλά δείχνει τι έγραψες
+    searchBtn.addEventListener('click', async () => {
+      const specs = searchSpecs.value.trim();
+      if (!specs) {
+        searchResults.innerText = 'Γράψε τα specs που ψάχνεις.';
+        return;
+      }
+
+      // Αργότερα εδώ:
+      // - Θα κάνεις fetch σε N8N webhook με body { specs }
+      // - Θα πάρεις πίσω JSON με products + rating
+      // Τώρα placeholder:
+      searchResults.innerText = 'Search requested for: ' + specs + ' (εδώ θα μπουν αποτελέσματα από N8N).';
+    });
+  </script>
+</body>
+</html>
